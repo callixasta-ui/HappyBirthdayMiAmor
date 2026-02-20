@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magical Birthday Hub</title>
+    <style>
+        :root {
+            --purple-dark: #1a0a2e;
+            --purple-mid: #3b246b;
+            --gold: #f1c40f;
+            --c1: #ff85a2; --c2: #6d4c41; --c3: #4e342e;
+            --c4: #ffffff; --c5: #fff9c4; --c6: #fbc02d;
+            --c7: #d1d1ff; --c8: #9b59b6; --c9: #6c5ce7;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background: radial-gradient(circle, var(--purple-mid) 0%, var(--purple-dark) 100%);
+            color: white; font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh; display: flex;
+            justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+
+        canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1; }
+
+        .card {
+            position: relative; z-index: 2;
+            width: 85%; max-width: 380px; text-align: center;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2rem 1.5rem; border-radius: 40px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .birthday-text {
+            font-size: 2.2rem; font-weight: 900; margin: 0 0 10px 0;
+            text-transform: uppercase; animation: colorShift 4s linear infinite;
+        }
+
+        @keyframes colorShift {
+            0%, 100% { color: #ff85a2; text-shadow: 0 0 10px #ff85a2; }
+            33% { color: #feca57; text-shadow: 0 0 10px #feca57; }
+            66% { color: #48dbfb; text-shadow: 0 0 10px #48dbfb; }
+        }
+
+        .cake-row { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+        .cake { position: relative; width: 60px; height: 54px; display: flex; flex-direction: column; }
+        .layer { width: 100%; height: 18px; border-radius: 4px 4px 0 0; }
+        .cake1 .l1 { background: var(--c1); } .cake1 .l2 { background: var(--c2); } .cake1 .l3 { background: var(--c3); border-radius: 0 0 4px 4px; }
+        .cake2 .l1 { background: var(--c4); } .cake2 .l2 { background: var(--c5); } .cake2 .l3 { background: var(--c6); border-radius: 0 0 4px 4px; }
+        .cake3 .l1 { background: var(--c7); } .cake3 .l2 { background: var(--c8); } .cake3 .l3 { background: var(--c9); border-radius: 0 0 4px 4px; }
+
+        .candle { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 4px; height: 15px; background: var(--gold); }
+        .flame { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 8px; height: 12px; background: orange; border-radius: 50%; animation: flicker 0.4s infinite alternate; }
+
+        .btn-spotify {
+            background: #1DB954; color: white; border: none;
+            padding: 15px; border-radius: 50px; font-weight: bold;
+            cursor: pointer; width: 100%; box-shadow: 0 10px 20px rgba(29, 185, 84, 0.3);
+        }
+
+        /* --- MOBILE MODAL FIXES --- */
+        #musicModal {
+            display: none; position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; max-width: 340px;
+            max-height: 70vh; /* Shorter to ensure it fits mobile screens */
+            background: #191414; border-radius: 25px;
+            z-index: 100; flex-direction: column;
+            overflow: hidden; /* Clips the inner scroll */
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+        }
+
+        .modal-header { padding: 15px; color: #1DB954; text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
+
+        .modal-content-scroll {
+            overflow-y: auto; padding: 15px;
+            flex-grow: 1; /* Makes this part take up the space */
+        }
+
+        .modal-footer { padding: 15px; border-top: 1px solid #333; }
+
+        .overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99;
+        }
+
+        @keyframes flicker { from { opacity: 0.8; } to { opacity: 1; transform: translateX(-50%) scale(1.2); } }
+    </style>
+</head>
+<body>
+
+<canvas id="fireworksCanvas"></canvas>
+
+<div class="card">
+    <h1 class="birthday-text">Happy Birthday!</h1>
+    <p style="opacity: 0.8; margin-bottom: 20px;">Infinite fireworks for you!</p>
+    
+    <div class="cake-row">
+        <div class="cake cake1"><div class="candle"><div class="flame"></div></div><div class="layer l1"></div><div class="layer l2"></div><div class="layer l3"></div></div>
+        <div class="cake cake2"><div class="candle"><div class="flame"></div></div><div class="layer l1"></div><div class="layer l2"></div><div class="layer l3"></div></div>
+        <div class="cake cake3"><div class="candle"><div class="flame"></div></div><div class="layer l1"></div><div class="layer l2"></div><div class="layer l3"></div></div>
+    </div>
+
+    <button class="btn-spotify" onclick="openModal()">🎵 Switch Tracks</button>
+</div>
+
+<div id="overlay" class="overlay" onclick="closeModal()"></div>
+
+<div id="musicModal">
+    <div class="modal-header">Select Birthday Vibe</div>
+    
+    <div class="modal-content-scroll">
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2pW5kNCx133MWWirxegvng?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2R5iTxkCln6NLTw6l0kjWw?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0uROb6x5IunKokDggpmwKz?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/5HhlxhFzxoAf1gzsGe45HV?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0GKQ7Ap1JunkTzLuuWjuKQ?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/7GxU8gDf6EStrsK4viUVSq?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/1S9lawaWBvNOZjJPeVSSIR?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2awQ87FIjcS3oukceOKXiJ?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/068subB1BWhPShZQMDxarN?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/16XNk3bVCSHXN1rlwbXtHb?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    </div>
+    
+    <div class="modal-footer">
+        <button onclick="closeModal()" style="background: #333; color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold;">Close</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('fireworksCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor(x, y) {
+            this.x = x; this.y = y;
+            this.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
+            this.vel = { x: (Math.random()-0.5)*8, y: (Math.random()-0.5)*8 };
+            this.alpha = 1;
+        }
+        draw() {
+            ctx.globalAlpha = this.alpha;
+            ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
+            ctx.fillStyle = this.color; ctx.fill();
+        }
+        update() { this.x += this.vel.x; this.y += this.vel.y; this.alpha -= 0.015; }
+    }
+
+    function launch() {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * (canvas.height * 0.5);
+        for(let i=0; i<30; i++) particles.push(new Particle(x, y));
+        setTimeout(launch, 700);
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(26, 10, 46, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+            if(p.alpha > 0) { p.update(); p.draw(); }
+            else { particles.splice(i, 1); }
+        });
+        requestAnimationFrame(animate);
+    }
+
+    function openModal() {
+        document.getElementById('musicModal').style.display = 'flex';
+        document.getElementById('overlay').style.display = 'block';
+    }
+    function closeModal() {
+        document.getElementById('musicModal').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    animate();
+    launch();
+</script>
+
+</body>
+</html>
